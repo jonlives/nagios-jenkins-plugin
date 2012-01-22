@@ -91,7 +91,7 @@ if ( $res->is_success ) {
   
 } else {
     $retStr = "Failed retrieving status for job $jobName via API (API status line: $res->{status_line})";
-    $exitCode = 1;
+    $exitCode = 3;
 }
 
 #Calculate build duration, and alert if needed
@@ -117,7 +117,7 @@ if ( $res2->is_success ) {
     
 } else {
     $retStr = "Failed retrieving status for last build via API (API status line: $res2->{status_line})";
-    $exitCode = 1;
+    $exitCode = 3;
     $currentlyBuilding = 'false';
 }
 
@@ -149,9 +149,9 @@ if( $numFailedBuilds > 0 ) {
 		$firstFailedBuildURL = $jobStatusUrlPrefix . "/" . $firstFailedBuildId;
   		$firstFailedBuildApiURL = $firstFailedBuildURL . "/api/json";
 		$req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
-    	$res3 = $ua3->request($req3);	
+    	        $res3 = $ua3->request($req3);	
 	}
-	
+
     if ( $res3->is_success ) {
       my $json3 = new JSON;
       my $obj3 = $json3->decode( $res3->content );
@@ -176,7 +176,7 @@ if( $numFailedBuilds > 0 ) {
                 
     } else {
       $retStr = "Failed retrieving status for first broken build via API (API status line: $res3->{status_line})";
-      $exitCode = 1;
+      $exitCode = 3;
     }
   }
 }
