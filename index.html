@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Nagios-jenkins-plugin : A nagios plugin for which lets you check jenkins jobs according to various criteria." />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Nagios-jenkins-plugin</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/jonlives/nagios-jenkins-plugin">Fork Me on GitHub</a>
+
+          <h1 id="project_title">Nagios-jenkins-plugin</h1>
+          <h2 id="project_tagline">A nagios plugin for which lets you check jenkins jobs according to various criteria.</h2>
+
+          <section id="downloads">
+            <a class="zip_download_link" href="https://github.com/jonlives/nagios-jenkins-plugin/zipball/master">Download this project as a .zip file</a>
+            <a class="tar_download_link" href="https://github.com/jonlives/nagios-jenkins-plugin/tarball/master">Download this project as a tar.gz file</a>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>nagios-jenkins-plugin</h1>
+
+<p>A nagios plugin for which lets you check jenkins jobs according to various criteria.</p>
+
+<h2>How to use it</h2>
+
+<p>The plugin supports several options, which you can pass "0" to disable that particular threshold.</p>
+
+<p>Usage:  check_jenkins_job_extended url jobname concurrentFailsThreshold concurrentUnstableThreshold buildDurationThresholdMilliseconds lastStableBuildThresholdInMinutesWarn lastStableBuildThresholdInMinutesCrit</p>
+
+<ul>
+<li><p>url: The URL to your jenkins server</p></li>
+<li><p>jobname: The name of the jenkins job you'd like to check</p></li>
+<li><p>concurrentFailsThreshold: The number of concurrent failing builds it should CRIT alert on</p></li>
+<li><p>concurrentUnstableThreshold: The number of concurrent unstable builds it should CRIT alert on</p></li>
+<li><p>buildDurationThresholdMilliseconds: It will alert if the last build took longer than this number of milliseconds to complete</p></li>
+<li><p>lastStableBuildThresholdInMinutesWarn: WARN if it's been this number of minutes since the last stable build</p></li>
+<li><p>lastStableBuildThresholdInMinutesCrit: CRIT if it's been this number of minutes since the last stable build</p></li>
+</ul><h2>Example</h2>
+
+<p>A sample nagios command using this plugin.</p>
+
+<pre><code>define command {
+  command_name    check_jenkins_job_ext
+  command_line    $USER1$/check_jenkins_job_extended.pl $ARG1$ $ARG2$ $ARG3$ $ARG4$ $ARG5$ $ARG6$ $ARG7$ 
+}
+</code></pre>
+
+<p>A sample nagios service using the above command to warn when it's been 4 mins since the last stable build, and crit when it's been 20.</p>
+
+<pre><code>define service {
+  use                             local-service
+  host_name                         buildserver.mycompany.com
+  service_description             Jenkins - prod build
+  check_interval                  1
+  check_command                   check_jenkins_job_ext!<a href="http://buildserver.mycompany.com!prod!0!0!0!4!20">http://buildserver.mycompany.com!prod!0!0!0!4!20</a>
+  contacts                      bob,bill
+}
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Nagios-jenkins-plugin maintained by <a href="https://github.com/jonlives">jonlives</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
