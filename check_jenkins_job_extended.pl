@@ -11,7 +11,7 @@ use DateTime;
 #
 # Plugin for checking hudson build that alerts when more than x builds have failed, or a build took more than y seconds.
 #
-# Usage: check_jenkins_job_extended url jobname concurrentFailsThreshold buildDurationThresholdMilliseconds lastStableBuildThresholdInMinutesWarn lastStableBuildThresholdInMinutesCrit
+# Usage: check_jenkins_job url [user_name password] job_name concurrent_fails_threshold build_duration_threshold_milliseconds last_stable_build_threshold_minutes_warn last_stable_build_threshold_minutes_crit
 
 # Nagios return values
 # OK = 0
@@ -151,11 +151,11 @@ if ( $res2->is_success ) {
 
 
 # GAH - A short comment on the logic below. This check should say "How long has it been since the first
-# broken build?" However, that requires that we look at the time of the first *failed* build, not
-# the last stable build. If we look at the last stable build, and that build happen at some
-# arbitrary time in the past, then this alert would trigger immediately (which is not desired).
-# To do this, we add 1 to the lastStableBuild to get the ID of the first unsuccessful build,
-# and we measure elapsed time relative to that build.
+#       broken build?" However, that requires that we look at the time of the first *failed* build, not
+#       the last stable build. If we look at the last stable build, and that build happen at some
+#       arbitrary time in the past, then this alert would trigger immediately (which is not desired).
+#       To do this, we add 1 to the lastStableBuild to get the ID of the first unsuccessful build,
+#       and we measure elapsed time relative to that build.
 if( $numFailedBuilds > 0 ) {
     
   # GAH - Have to manually construct the build URL for the first failed build
@@ -169,14 +169,14 @@ if( $numFailedBuilds > 0 ) {
     my $req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
     my $res3 = $ua3->request($req3);
     
-while ($res3->code == "404" && $firstFailedBuildId < $lastStableBuild + $numFailedBuilds)
-{
-++$firstFailedBuildId;
-$firstFailedBuildURL = $jobStatusUrlPrefix . "/" . $firstFailedBuildId;
-   $firstFailedBuildApiURL = $firstFailedBuildURL . "/api/json";
-$req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
-     $res3 = $ua3->request($req3);
-}
+    while ($res3->code == "404" && $firstFailedBuildId < $lastStableBuild + $numFailedBuilds)
+    {
+      ++$firstFailedBuildId;
+      $firstFailedBuildURL = $jobStatusUrlPrefix . "/" . $firstFailedBuildId;
+      $firstFailedBuildApiURL = $firstFailedBuildURL . "/api/json";
+      $req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
+      $res3 = $ua3->request($req3);
+    }
 
     if ( $res3->is_success ) {
       my $json3 = new JSON;
