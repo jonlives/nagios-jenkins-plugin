@@ -11,7 +11,7 @@ use DateTime;
 #
 # Plugin for checking hudson build that alerts when more than x builds have failed, or a build took more than y seconds.
 #
-# Usage:  check_jenkins_job_extended url jobname concurrentFailsThreshold buildDurationThresholdMilliseconds lastStableBuildThresholdInMinutesWarn lastStableBuildThresholdInMinutesCrit
+# Usage: check_jenkins_job_extended url jobname concurrentFailsThreshold buildDurationThresholdMilliseconds lastStableBuildThresholdInMinutesWarn lastStableBuildThresholdInMinutesCrit
 
 # Nagios return values
 # OK = 0
@@ -24,20 +24,40 @@ my @alertStrs = ("OK", "WARNING", "CRITICAL", "UNKNOWN");
 my $exitCode = 3;
 my $numArgs = $#ARGV + 1;
 
-# check arguments
-if ( $numArgs != 6 ) {
-  print "Usage: check_jenkins_job url jobname concurrentFailsThreshold buildDurationThresholdMilliseconds lastStableBuildThresholdInMinutesWarn lastStableBuildThresholdInMinutesCrit\n";
+my $ciMasterUrl;
+my $jobName;
+
+my $userName;
+my $password;
+
+my $failureThreshold;
+my $buildDurThreshold;
+my $lsbThresholdWarn;
+my $lsbThresholdCrit;
+
+if ( $numArgs == 8 ){
+   $ciMasterUrl = $ARGV[0];
+   $userName = $ARGV[1];
+   $password = $ARGV[2];
+   $jobName = $ARGV[3];
+   $failureThreshold = $ARGV[4];
+   $buildDurThreshold = $ARGV[5];
+   $lsbThresholdWarn = $ARGV[6];
+   $lsbThresholdCrit = $ARGV[7];
+} elsif ( $numArgs == 6 ){
+   $ciMasterUrl = $ARGV[0];
+   $jobName = $ARGV[1];
+   $failureThreshold = $ARGV[2];
+   $buildDurThreshold = $ARGV[3];
+   $lsbThresholdWarn = $ARGV[4];
+   $lsbThresholdCrit = $ARGV[5];
+} else {
+  print "\nUsage: check_jenkins_job url [user_name password] job_name concurrent_fails_threshold build_duration_threshold_milliseconds last_stable_build_threshold_minutes_warn last_stable_build_threshold_minutes_crit\n";
   exit $exitCode;
 }
 
-my $ciMasterUrl = $ARGV[0];
-my $jobName = $ARGV[1];
 my $jobStatusUrlPrefix = $ciMasterUrl . "/job/" . $jobName;
 my $jobStatusURL = $jobStatusUrlPrefix . "/api/json";
-my $failureThreshold = $ARGV[2];
-my $buildDurThreshold = $ARGV[3];
-my $lsbThresholdWarn = $ARGV[4];
-my $lsbThresholdCrit = $ARGV[5];
 
 my $ua = LWP::UserAgent->new;
 my $req = HTTP::Request->new( GET => $jobStatusURL );
@@ -51,6 +71,9 @@ my $buildTimeStamp = 0;
 my $currentlyBuilding = "";
 my $numFailedBuilds = 0;
 
+if ( !$userName eq '') {
+    $req->authorization_basic( $userName, $password );
+}
 # make request to Hudson
 my $res = $ua->request($req);
 
@@ -97,6 +120,9 @@ if ( $res->is_success ) {
 #Calculate build duration, and alert if needed
 my $ua2 = LWP::UserAgent->new;
 my $req2 = HTTP::Request->new( GET => $lastBuildURL );
+if ( !$userName eq '' ) {
+    $req2->authorization_basic( $userName, $password);
+}
 my $res2 = $ua2->request($req2);
 $currentlyBuilding = "";
 
@@ -124,12 +150,12 @@ if ( $res2->is_success ) {
 #Calculate time since last successful build
 
 
-# GAH - A short comment on the logic below. This check should say "How long has it been since the first 
-#       broken build?"  However, that requires that we look at the time of the first *failed* build, not 
-#       the last stable build.  If we look at the last stable build, and that build happen at some 
-#       arbitrary time in the past, then this alert would trigger immediately (which is not desired).
-#       To do this, we add 1 to the lastStableBuild to get the ID of the first unsuccessful build, 
-#       and we measure elapsed time relative to that build.
+# GAH - A short comment on the logic below. This check should say "How long has it been since the first
+# broken build?" However, that requires that we look at the time of the first *failed* build, not
+# the last stable build. If we look at the last stable build, and that build happen at some
+# arbitrary time in the past, then this alert would trigger immediately (which is not desired).
+# To do this, we add 1 to the lastStableBuild to get the ID of the first unsuccessful build,
+# and we measure elapsed time relative to that build.
 if( $numFailedBuilds > 0 ) {
     
   # GAH - Have to manually construct the build URL for the first failed build
@@ -143,14 +169,14 @@ if( $numFailedBuilds > 0 ) {
     my $req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
     my $res3 = $ua3->request($req3);
     
-	while ($res3->code == "404" && $firstFailedBuildId < $lastStableBuild + $numFailedBuilds)
-	{
-		++$firstFailedBuildId;
-		$firstFailedBuildURL = $jobStatusUrlPrefix . "/" . $firstFailedBuildId;
-  		$firstFailedBuildApiURL = $firstFailedBuildURL . "/api/json";
-		$req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
-    	        $res3 = $ua3->request($req3);	
-	}
+while ($res3->code == "404" && $firstFailedBuildId < $lastStableBuild + $numFailedBuilds)
+{
+++$firstFailedBuildId;
+$firstFailedBuildURL = $jobStatusUrlPrefix . "/" . $firstFailedBuildId;
+   $firstFailedBuildApiURL = $firstFailedBuildURL . "/api/json";
+$req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
+     $res3 = $ua3->request($req3);
+}
 
     if ( $res3->is_success ) {
       my $json3 = new JSON;
@@ -163,10 +189,10 @@ if( $numFailedBuilds > 0 ) {
       my $tmin = ($tdiff->hours * 60) + $tdiff->minutes;
       if( $currentlyBuilding eq 'false' ) {
  
-        if( int($lsbThresholdCrit) <= int($tmin) && int($lsbThresholdCrit) != "0"  ) { 
+        if( int($lsbThresholdCrit) <= int($tmin) && int($lsbThresholdCrit) != "0" ) {
           $retStr = "Build has been broken for " . $tmin ." minutes; first failed build number: " . $firstFailedBuildId . " (" . $firstFailedBuildURL . ")";
           $exitCode = 2;
-        } elsif( int($lsbThresholdWarn) <= int($tmin) && int($lsbThresholdWarn) != "0" ) { 
+        } elsif( int($lsbThresholdWarn) <= int($tmin) && int($lsbThresholdWarn) != "0" ) {
           $retStr = "Build has been broken for " . $tmin ." minutes; first failed build number: " . $firstFailedBuildId . " (" . $firstFailedBuildURL . ")";
           $exitCode = 1;
         } else {
