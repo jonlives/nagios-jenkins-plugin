@@ -189,8 +189,8 @@ if( $numFailedBuilds > 0 ) {
             
       my $dt = DateTime->from_epoch( epoch => $currenttime );
       my $bts = DateTime->from_epoch( epoch => $buildTimeStamp );
-      my $tdiff = $dt - $bts;
-      my $tmin = ($tdiff->hours * 60) + $tdiff->minutes;
+      my $tdiff = $bts->delta_ms($dt);
+      my $tmin = $tdiff->in_units('minutes');
       if( $currentlyBuilding eq 'false' ) {
  
         if( int($lsbThresholdCrit) <= int($tmin) && int($lsbThresholdCrit) != "0" ) {
