@@ -3,6 +3,7 @@ use strict;
 use LWP::UserAgent;
 use JSON;
 use DateTime;
+use URI::Escape;
 
 #
 # Check Hudson job status using the JSON API
@@ -56,7 +57,7 @@ if ( $numArgs == 8 ){
   exit $exitCode;
 }
 
-my $jobStatusUrlPrefix = $ciMasterUrl . "/job/" . $jobName;
+my $jobStatusUrlPrefix = $ciMasterUrl . "/job/" . uri_escape($jobName);
 my $jobStatusURL = $jobStatusUrlPrefix . "/api/json";
 
 my $ua = LWP::UserAgent->new;
