@@ -167,6 +167,9 @@ if( $numFailedBuilds > 0 ) {
   if ( $firstFailedBuildApiURL ne "" ) {
     my $ua3 = LWP::UserAgent->new;
     my $req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
+    if ( !$userName eq '' ) {
+      $req3->authorization_basic( $userName, $password);
+    }
     my $res3 = $ua3->request($req3);
     
     while ($res3->code == "404" && $firstFailedBuildId < $lastStableBuild + $numFailedBuilds)
