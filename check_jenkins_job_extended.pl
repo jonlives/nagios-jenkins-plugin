@@ -53,7 +53,7 @@ if ( $numArgs == 8 ){
    $lsbThresholdWarn = $ARGV[4];
    $lsbThresholdCrit = $ARGV[5];
 } else {
-  print "\nUsage: check_jenkins_job url [user_name password] job_name concurrent_fails_threshold build_duration_threshold_milliseconds last_stable_build_threshold_minutes_warn last_stable_build_threshold_minutes_crit\n";
+  print "\nUsage: check_jenkins_job url [user_name password] job_name concurrent_fails_threshold build_duration_threshold_seconds last_stable_build_threshold_seconds_warn last_stable_build_threshold_seconds_crit\n";
   exit $exitCode;
 }
 
@@ -131,15 +131,15 @@ if ( $res2->is_success ) {
     my $json2 = new JSON;
     my $obj2 = $json2->decode( $res2->content );
     my $buildDuration = $obj2->{duration};
-    my $buildDurationMins = $buildDuration / (60 * 1000);
-    my $buildDurationMinsAsStr = sprintf("%.2f", $buildDurationMins);
+    my $buildDurationSecs = $buildDuration / 1000;
+    my $buildDurationSecsAsStr = sprintf("%d", $buildDurationSecs);
     $currentlyBuilding = $obj2->{building};
 
-    if ( $buildDurThreshold <= $buildDuration && $buildDurThreshold != "0" ) {
-        $retStr = "Duration of last build (" . $lastBuild . "): " . $buildDurationMinsAsStr . " minutes";
+    if ( $buildDurThreshold <= $buildDurationSecs && $buildDurThreshold != "0" ) {
+        $retStr = "Duration of last build (" . $lastBuild . "): " . $buildDurationSecsAsStr . " seconds";
         $exitCode = 2;
     } else {
-        $retStr = $retStr . ", duration of build ". $lastBuild . " was " . $buildDurationMinsAsStr . " minutes";
+        $retStr = $retStr . ", duration of build ". $lastBuild . " was " . $buildDurationSecsAsStr . " seconds";
     }
     
 } else {
@@ -190,17 +190,17 @@ if( $numFailedBuilds > 0 ) {
       my $dt = DateTime->from_epoch( epoch => $currenttime );
       my $bts = DateTime->from_epoch( epoch => $buildTimeStamp );
       my $tdiff = $bts->delta_ms($dt);
-      my $tmin = $tdiff->in_units('minutes');
+      my $tsec = ($tdiff->in_units('minutes') * 60) + $tdiff->in_units('seconds');
       if( $currentlyBuilding eq 'false' ) {
  
-        if( int($lsbThresholdCrit) <= int($tmin) && int($lsbThresholdCrit) != "0" ) {
-          $retStr = "Build has been broken for " . $tmin ." minutes; first failed build number: " . $firstFailedBuildId . " (" . $firstFailedBuildURL . ")";
+        if( int($lsbThresholdCrit) <= int($tsec) && int($lsbThresholdCrit) != "0" ) {
+          $retStr = "Build has been broken for " . $tsec ." seconds; first failed build number: " . $firstFailedBuildId . " (" . $firstFailedBuildURL . ")";
           $exitCode = 2;
-        } elsif( int($lsbThresholdWarn) <= int($tmin) && int($lsbThresholdWarn) != "0" ) {
-          $retStr = "Build has been broken for " . $tmin ." minutes; first failed build number: " . $firstFailedBuildId . " (" . $firstFailedBuildURL . ")";
+        } elsif( int($lsbThresholdWarn) <= int($tsec) && int($lsbThresholdWarn) != "0" ) {
+          $retStr = "Build has been broken for " . $tsec ." seconds; first failed build number: " . $firstFailedBuildId . " (" . $firstFailedBuildURL . ")";
           $exitCode = 1;
         } else {
-          $retStr .= ", build has been broken for " . $tmin ." minutes; first failed build number: " . $firstFailedBuildId . " (" . $firstFailedBuildURL . ")";
+          $retStr .= ", build has been broken for " . $tsec ." seconds; first failed build number: " . $firstFailedBuildId . " (" . $firstFailedBuildURL . ")";
         }
       } # END if(!$currentlyBuilding)
                 
