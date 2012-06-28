@@ -1,4 +1,72 @@
-# nagios-jenkins-plugin
+
+# Overview
+
+This repostitory contains two nagios plugins:
+* check_jenkins_job_extended.pl - The original, as documented below. Designed to check for failures, not how long since success.
+* check_jenkins_cron.pl - A from-scratch copy designed to check jobs that *should* build periodically.
+
+# check_jenkins_cron.pl
+
+## Usage
+
+```
+usage: ./check_jenkins_cron.pl -j <job> -l <url> -w <threshold> -c <threshold> [-f] [-u username -p password] [-v]
+    
+    Required arguments
+        -j <job>        : Jenkins job name
+                          The name of the job to examine.
+                          
+        -l <url>        : Jenkins URL
+                          Protocol assumed to be http if none specified.
+                          
+        -w <threshold>  : Warning Threshold (seconds)
+                          WARNING when the last successful run was over <threshold> seconds ago.
+                          CRITICAL when last successful run was over <threshold> and failures
+                          have occured since then.
+                          
+        -c <threshold>  : Critical Threshold (seconds)
+                          CRITICAL when the last successful run was over <threshold> seconds ago.
+                           
+    Optional arugments
+        -f              : WARNING when the last run was not successful, even if the last
+                          successful run is within the -w and -c thresholds.
+                          
+        -u <username>   : Jenkins Username if anonymous API access is not available
+        
+        -p <password>   : Jenkins Password if anonymous API access is not available
+        
+        -v              : Increased verbosity.
+                          This will confuse nagios, and should only be used for debug purposes
+                          when testing this plugin.
+```
+
+## Sample nagios configuration
+
+
+Command definition
+
+```
+define command {
+  command_name    check_jenkins_cron
+  command_line    $USER1$/check_jenkins_cron.pl -j '$ARG1$' -l $ARG2$ -w $ARG3$ -c $ARG4$ -f -u $ARG5$ -p $ARG6$
+}
+```
+
+Service definition to warn when a job hasn't built for 24 hours, and crit when it hasn't built for 36 hours.
+
+```
+define service {
+  use                             local-service
+  host_name                       buildserver.mycompany.com
+  service_description             Jenkins - prod build
+  check_interval                  1
+  check_command                   check_jenkins_cron!Producuction build!buildserver.mycompany.com!86400!129600!myuser!mypassword
+  contacts                        bob,bill
+}
+```
+
+
+# nagios-jenkins-plugin (check_jenkins_job_extended.pl)
 
 A nagios plugin for which lets you check jenkins jobs according to various criteria.
 
