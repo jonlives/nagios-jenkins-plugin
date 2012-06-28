@@ -5,6 +5,8 @@
 # A re-written from scratch version of check_jenkins_job_extended.pl, focusing on jobs which are meant
 # to be run periodically. This is designed to alert if there have been no successful builds within a
 # timeframe, not just if a build has been failing for a duration. See usage output for options.
+#
+# 2012 Nick Robinson-Wall, Mendeley Ltd.
 
 use strict;
 use LWP;
