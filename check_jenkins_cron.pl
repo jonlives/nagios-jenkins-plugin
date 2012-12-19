@@ -84,7 +84,7 @@ sub main {
                 response("WARNING", "'$jobname' has not run successfully for $dur_human. No runs since. " . $lb_data->{url})
             }
             
-            if ($ls_data->{number} != $lb_data->{number} && $alert_on_fail) {
+            if ($ls_data->{number} != $lb_data->{number} && $alert_on_fail && !$lb_data->{building}) {
                 ($dur_sec, $dur_human) = calcdur(int($lb_data->{timestamp} / 1000));
                 response ( "WARNING", "'$jobname' failed $dur_human ago. " . $lb_data->{url} );
             } else {
