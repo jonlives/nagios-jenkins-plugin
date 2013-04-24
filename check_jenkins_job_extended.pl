@@ -179,6 +179,9 @@ if( $numFailedBuilds > 0 ) {
       $firstFailedBuildURL = $jobStatusUrlPrefix . "/" . $firstFailedBuildId;
       $firstFailedBuildApiURL = $firstFailedBuildURL . "/api/json";
       $req3 = HTTP::Request->new( GET => $firstFailedBuildApiURL );
+      if ( !$userName eq '' ) {
+        $req3->authorization_basic( $userName, $password);
+      }
       $res3 = $ua3->request($req3);
     }
 
