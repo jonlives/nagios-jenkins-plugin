@@ -27,6 +27,7 @@ my $thresh_warn;
 my $thresh_crit;
 my $alert_on_fail;
 my $debug = 0;
+my $timeout = 0;
 
 sub main {
     # Getopts:
@@ -37,15 +38,19 @@ sub main {
     # w: Warning threshold
     # c: critical threshold
     # f: Alert on fail outside timeframe (optional)
+    # t: timeout in seconds (optional)
     # v: verbosity / debug (optional)
     my %opts;
-    getopts('j:l:u:p:w:c:fv', \%opts);
+    getopts('j:l:u:p:w:c:t:fv', \%opts);
 
     if (!$opts{j} || !$opts{l}) {
         print STDERR "Missing option(s)\n\n";
         &usage;
     }
     $debug = $opts{v};    
+    if ($opts{'t'}) {
+        $timeout = $opts{t};
+    }
     $jobname = $opts{j};
     $jobnameU = uri_escape($opts{j});
     $jenkins_ubase = $opts{l};
@@ -65,8 +70,8 @@ sub main {
         &usage;
     }
     
-    my ($lb_status, $lb_resp, $lb_data) = apireq('lastBuild');
-    my ($ls_status, $ls_resp, $ls_data) = apireq('lastStableBuild');
+    my ($lb_status, $lb_resp, $lb_data) = apireq('lastBuild', $timeout);
+    my ($ls_status, $ls_resp, $ls_data) = apireq('lastStableBuild', $timeout);
     my $ls_not_lb = 0;
     
     if ($ls_status || $lb_status) {
@@ -117,10 +122,14 @@ sub calcdur($) {
 # Perform Jenkins JSON API request for $_ API call (lastBuild/lastStableBuild/lastSuccessfulBuild/lastFailedBuild etc)
 sub apireq($) {
     my $job = shift;
+    my $timeout = shift;
     my $url = "$jenkins_ubase/job/$jobnameU/$job/api/json";
     print STDERR "Preparing API URL for query: $url\n" if $debug;
     
     my $ua = LWP::UserAgent->new;
+    if ($timeout) {
+        $ua->timeout($timeout);
+    }
     my $req = HTTP::Request->new( GET => $url );
     
     if ( $username && $password ) {
@@ -217,6 +226,8 @@ usage: $0 -j <job> -l <url> -w <threshold> -c <threshold> [-f] [-u username -p p
         -u <username>   : Jenkins Username if anonymous API access is not available
         
         -p <password>   : Jenkins Password if anonymous API access is not available
+
+        -t <seconds>    : Timout value when requesting to API, 180 by default
         
         -v              : Increased verbosity.
                           This will confuse nagios, and should only be used for debug purposes
