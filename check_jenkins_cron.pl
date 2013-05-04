@@ -26,6 +26,7 @@ my $password;
 my $thresh_warn;
 my $thresh_crit;
 my $alert_on_fail;
+my $alert_on_nostart;
 my $debug = 0;
 my $timeout = 0;
 
@@ -39,9 +40,10 @@ sub main {
     # c: critical threshold
     # f: Alert on fail outside timeframe (optional)
     # t: timeout in seconds (optional)
+    # s: Alert on situation when was never started
     # v: verbosity / debug (optional)
     my %opts;
-    getopts('j:l:u:p:w:c:t:fv', \%opts);
+    getopts('j:l:u:p:w:c:t:s:fv', \%opts);
 
     if (!$opts{j} || !$opts{l}) {
         print STDERR "Missing option(s)\n\n";
@@ -63,6 +65,7 @@ sub main {
     $password = $opts{p};
     $thresh_warn = int($opts{w});
     $thresh_crit = int($opts{c});
+    $alert_on_nostart = $opts{s};
     $alert_on_fail = $opts{f};
     
     if ($thresh_warn == 0 && $thresh_crit == 0) {
@@ -100,7 +103,14 @@ sub main {
             response ( 2, "'$jobname' has never run successfully. Last build was $dur_human ago." )
         }
     } else {
-        response( "UNKNOWN", "Unable to retrieve data from Jenkins API: " . $ls_resp );
+        if ($alert_on_nostart) {
+            my ($job_status, $job_resp, $job_data) = apireq('', $timeout);
+            if ($job_status) {
+                response ( "WARNING", "'$jobname' has never run at all. Please check schedule." );
+            }
+        } else {
+            response( "UNKNOWN", "Unable to retrieve data from Jenkins API: " . $ls_resp );
+        }
     }
     
     response($rcode, $response);
@@ -222,6 +232,8 @@ usage: $0 -j <job> -l <url> -w <threshold> -c <threshold> [-f] [-u username -p p
     Optional arugments
         -f              : WARNING when the last run was not successful, even if the last
                           successful run is within the -w and -c thresholds.
+
+        -s              : WARNING when job was never started at all
                           
         -u <username>   : Jenkins Username if anonymous API access is not available
         
