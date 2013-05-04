@@ -107,6 +107,8 @@ sub main {
             my ($job_status, $job_resp, $job_data) = apireq('', $timeout);
             if ($job_status) {
                 response ( "WARNING", "'$jobname' has never run at all. Please check schedule." );
+            } else {
+                response( "UNKNOWN", "Unable to retrieve data from Jenkins API: " . $ls_resp );
             }
         } else {
             response( "UNKNOWN", "Unable to retrieve data from Jenkins API: " . $ls_resp );
