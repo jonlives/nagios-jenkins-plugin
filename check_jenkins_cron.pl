@@ -26,6 +26,7 @@ my $password;
 my $thresh_warn;
 my $thresh_crit;
 my $alert_on_fail;
+my $alert_on_lastx_fail;
 my $alert_on_nostart;
 my $debug = 0;
 my $timeout = 0;
@@ -39,11 +40,12 @@ sub main {
     # w: Warning threshold
     # c: critical threshold
     # f: Alert on fail outside timeframe (optional)
+    # a: Alert if last X builds were failed
     # t: timeout in seconds (optional)
     # s: Alert on situation when was never started
     # v: verbosity / debug (optional)
     my %opts;
-    getopts('j:l:u:p:w:c:t:s:fv', \%opts);
+    getopts('j:l:u:p:w:c:a:t:s:fv', \%opts);
 
     if (!$opts{j} || !$opts{l}) {
         print STDERR "Missing option(s)\n\n";
@@ -67,6 +69,12 @@ sub main {
     $thresh_crit = int($opts{c});
     $alert_on_nostart = $opts{s};
     $alert_on_fail = $opts{f};
+    if ($opts{'a'}) {
+        $alert_on_lastx_fail=int($opts{a});
+        if ($alert_on_lastx_fail == 1) {
+            $alert_on_fail = 1;
+        }
+    }
     
     if ($thresh_warn == 0 && $thresh_crit == 0) {
         print STDERR "Must set either warning or critical threshold to a sensible value\n\n";
@@ -92,9 +100,46 @@ sub main {
                 response("WARNING", "'$jobname' has not run successfully for $dur_human. No runs since. " . $lb_data->{url})
             }
             
-            if ($ls_data->{number} != $lb_data->{number} && $alert_on_fail) {
+            if ($ls_data->{number} != $lb_data->{number} && $alert_on_fail and $alert_on_lastx_fail <= 1) {
                 ($dur_sec, $dur_human) = calcdur(int($lb_data->{timestamp} / 1000));
                 response ( "WARNING", "'$jobname' failed $dur_human ago. " . $lb_data->{url} );
+            } elsif ($alert_on_lastx_fail > 1 && $lb_data->{number}-$ls_data->{number} >=$alert_on_lastx_fail) { # we should check on how many failed builds happened only if difference from last success and last build is equal or more than threahold value
+                #request job status to get list of jobs and lastFailedBuild (it could differ from last build).
+                my ($job_status, $job_resp, $job_data) = apireq('', $timeout);
+                if ($job_status) {
+                    my @jobs;
+                    # prepare array with jobs that bigger than last stable and less than last failed
+                    foreach my $key(@{$job_data->{builds}}) {
+                        if ($key->{'number'} < $job_data->{lastFailedBuild}->{number} && $key->{'number'} > $job_data->{lastStableBuild}->{number}) {
+                            push(@jobs, $key->{'number'});
+                        }
+                    }
+                    my @jobst=reverse sort @jobs;
+                    @jobs=@jobst;
+                    # check whether count of jobs are bigger than threahold value
+                    if (scalar @jobst >= $alert_on_lastx_fail - 1 ) {
+                        my $failed_jobs=1; # set is to 1 as we already knew that lastFailedBuild was failed
+                        my $count=1;
+                        # get statuses of interesting jobs and stop checking them as only we reached threshold or understand that we can't it
+                        while ($failed_jobs < $alert_on_lastx_fail && scalar @jobs > 0 && $count < 30 ) {
+                            my $job = shift @jobs;
+                            my ($jobf_status, $jobf_resp, $jobf_data) = apireq($job, $timeout);
+                            if ($jobf_status && $jobf_data->{result} eq 'FAILURE') {
+                                ++$failed_jobs;
+                            }
+                            ++$count;
+                        }
+                        if ($failed_jobs >= $alert_on_lastx_fail) {
+                            response("CRITICAL", "'$jobname' was failed at least $failed_jobs time since last successfull build ".$job_data->{lastStableBuild}->{number}.". " . $lb_data->{url});
+                        } else {
+                            response ( "OK", "'$jobname' succeeded $dur_human ago, but with $failed_jobs failed jobs since last success. " . $lb_data->{url} );
+                        }
+                    } else {
+                        response ( "OK", "'$jobname' succeeded $dur_human ago. " . $lb_data->{url} );
+                    }
+                } else {
+                    response( "UNKNOWN", "Unable to retrieve data from Jenkins API: " . $job_resp );
+                }
             } else {
                 response ( "OK", "'$jobname' succeeded $dur_human ago. " . $lb_data->{url} );
             }
@@ -234,6 +279,9 @@ usage: $0 -j <job> -l <url> -w <threshold> -c <threshold> [-f] [-u username -p p
     Optional arugments
         -f              : WARNING when the last run was not successful, even if the last
                           successful run is within the -w and -c thresholds.
+
+        -a <count>      : WARNING when last <count> builds were not successful.
+                          -a 1 means the same as -f
 
         -s              : WARNING when job was never started at all
                           
