@@ -259,7 +259,7 @@ sub response($$) {
 
 sub usage {
     print << "EOF";
-usage: $0 -j <job> -l <url> -w <threshold> -c <threshold> [-f] [-u username -p password] [-v]
+usage: $0 -j <job> -l <url> -w <threshold> -c <threshold> [-f] [-u username -p password] [-a count] [-s] [-t seconds] [-v]
     
     Required arguments
         -j <job>        : Jenkins job name
