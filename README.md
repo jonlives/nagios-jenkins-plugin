@@ -11,30 +11,30 @@ This repostitory contains two nagios plugins:
 
 ```
 usage: ./check_jenkins_cron.pl -j <job> -l <url> -w <threshold> -c <threshold> [-f] [-u username -p password] [-v]
-    
+
     Required arguments
         -j <job>        : Jenkins job name
                           The name of the job to examine.
-                          
+
         -l <url>        : Jenkins URL
                           Protocol assumed to be http if none specified.
-                          
+
         -w <threshold>  : Warning Threshold (seconds)
                           WARNING when the last successful run was over <threshold> seconds ago.
                           CRITICAL when last successful run was over <threshold> and failures
                           have occured since then.
-                          
+
         -c <threshold>  : Critical Threshold (seconds)
                           CRITICAL when the last successful run was over <threshold> seconds ago.
-                           
+
     Optional arugments
         -f              : WARNING when the last run was not successful, even if the last
                           successful run is within the -w and -c thresholds.
-                          
+
         -u <username>   : Jenkins Username if anonymous API access is not available
-        
+
         -p <password>   : Jenkins Password if anonymous API access is not available
-        
+
         -v              : Increased verbosity.
                           This will confuse nagios, and should only be used for debug purposes
                           when testing this plugin.
@@ -74,15 +74,17 @@ A nagios plugin for which lets you check jenkins jobs according to various crite
 
 The plugin supports several options, which you can pass "0" to disable that particular threshold.
 
-Usage:  check_jenkins_job_extended url jobname concurrentFailsThreshold concurrentUnstableThreshold buildDurationThresholdMilliseconds lastStableBuildThresholdInMinutesWarn lastStableBuildThresholdInMinutesCrit
+Usage:  check_jenkins_job_extended url jobname concurrentFailsThreshold  buildDurationThresholdMilliseconds lastStableBuildThresholdInMinutesWarn lastStableBuildThresholdInMinutesCrit
 
 * url: The URL to your jenkins server
+
+* username: The username for auth to your jenkins server [optional]
+
+* password: The password for auth to your jenkins server [optional]
 
 * jobname: The name of the jenkins job you'd like to check
 
 * concurrentFailsThreshold: The number of concurrent failing builds it should CRIT alert on
-
-* concurrentUnstableThreshold: The number of concurrent unstable builds it should CRIT alert on
 
 * buildDurationThresholdMilliseconds: It will alert if the last build took longer than this number of milliseconds to complete
 
@@ -97,7 +99,7 @@ A sample nagios command using this plugin.
 ```
 define command {
   command_name    check_jenkins_job_ext
-  command_line    $USER1$/check_jenkins_job_extended.pl $ARG1$ $ARG2$ $ARG3$ $ARG4$ $ARG5$ $ARG6$ $ARG7$ 
+  command_line    $USER1$/check_jenkins_job_extended.pl $ARG1$ $ARG2$ $ARG3$ $ARG4$ $ARG5$ $ARG6$ $ARG7$
 }
 ```
 
