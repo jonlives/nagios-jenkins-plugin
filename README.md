@@ -99,7 +99,7 @@ A sample nagios command using this plugin.
 ```
 define command {
   command_name    check_jenkins_job_ext
-  command_line    $USER1$/check_jenkins_job_extended.pl $ARG1$ $ARG2$ $ARG3$ $ARG4$ $ARG5$ $ARG6$ $ARG7$
+  command_line    $USER1$/check_jenkins_job_extended.pl $ARG1$ $ARG2$ $ARG3$ $ARG4$ $ARG5$ $ARG6$ $ARG7$ $ARG8$
 }
 ```
 
@@ -111,7 +111,7 @@ define service {
   host_name                 	    buildserver.mycompany.com
   service_description             Jenkins - prod build
   check_interval                  1
-  check_command                   check_jenkins_job_ext!http://buildserver.mycompany.com!prod!0!0!0!4!20
+  check_command                   check_jenkins_job_ext!http://buildserver.mycompany.com!prod!0!0!4!20
   contacts						bob,bill
 }
 ```
