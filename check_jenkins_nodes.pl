@@ -11,6 +11,7 @@ use Getopt::Std;
 
 use Data::Dumper;
 # TODO: get error code & output correct
+# TODO: error if warning > critical
 
 sub main {
 
@@ -28,24 +29,26 @@ sub main {
     my $ciHost   = $options{'s'};
     my $username = $options{'u'};
     my $password = $options{'p'};
+    my $warning  = $options{'w'};
+    my $critical = $options{'c'};
 
     my $nodeStatusUrl = $ciHost . "/computer/api/json";
 
     my $ua = LWP::UserAgent->new;
-    my $req = HTTP::Request->new( GET => $nodeStatusUrl );
+    my $req = HTTP::Request->new(GET => $nodeStatusUrl);
 
-    if ( $username )
+    if ($username)
     {
-        $req->authorization_basic( $username, $password );
+        $req->authorization_basic($username, $password);
     }
 
     my $res = $ua->request($req);
 
     # if we have a HTTP 200 OK response
-    if ( $res->is_success )
+    if ($res->is_success)
     {
         my $json = new JSON;
-        my $obj = $json->decode( $res->content );
+        my $obj = $json->decode($res->content);
 
         my @offline;
         my $totalNodes = 0;
@@ -60,6 +63,35 @@ sub main {
                     'offlineCauseReason' => $computer->{'offlineCauseReason'}
                 });
             }
+        }
+
+        if (my $offlineNodes = scalar(@offline))
+        {
+            my $criticalThreshold = $critical;
+            if ($critical =~ s/\%$//)
+            {
+                $criticalThreshold = $critical/100 * $totalNodes;
+            }
+
+            if ($offlineNodes >= $criticalThreshold)
+            {
+                print "offlineNodes = $offlineNodes/$totalNodes, criticalThreshold=$criticalThreshold\n";
+                exit $ERRORS{'CRITICAL'};
+            }
+
+            my $warningThreshold = $warning;
+            if ($warning =~ s/\%$//)
+            {
+                $warningThreshold = $warning/100 * $totalNodes;
+            }
+
+            if ($offlineNodes >= $warningThreshold)
+            {
+                print "offlineNodes = $offlineNodes/$totalNodes, warningThreshold=$warningThreshold\n";
+                exit $ERRORS{'WARNING'};
+            }
+
+            exit $ERRORS{'OK'};
         }
 
     }
