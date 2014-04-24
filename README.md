@@ -1,9 +1,10 @@
 
 # Overview
 
-This repostitory contains two nagios plugins:
+This repostitory contains three nagios plugins:
 * check_jenkins_job_extended.pl - The original, as documented below. Designed to check for failures, not how long since success.
 * check_jenkins_cron.pl - A from-scratch copy designed to check jobs that *should* build periodically.
+* check_jenkins_nodes.pl - Checks the number of nodes with a status of "offline".
 
 # check_jenkins_cron.pl
 
@@ -27,7 +28,7 @@ usage: ./check_jenkins_cron.pl -j <job> -l <url> -w <threshold> -c <threshold> [
         -c <threshold>  : Critical Threshold (seconds)
                           CRITICAL when the last successful run was over <threshold> seconds ago.
 
-    Optional arugments
+    Optional arguments
         -f              : WARNING when the last run was not successful, even if the last
                           successful run is within the -w and -c thresholds.
 
@@ -113,5 +114,56 @@ define service {
   check_interval                  1
   check_command                   check_jenkins_job_ext!http://buildserver.mycompany.com!prod!0!0!4!20
   contacts						bob,bill
+}
+```
+
+
+# check_jenkins_nodes.pl
+
+## Usage
+
+```
+Usage: check_jenkins_nodes.pl -s [jenkins server hostname & path] -w [integer or %] -c [integer or %] [-h this help message] [-u username] [-p password] [-v]
+
+Required Arguments:
+    -s <server hostname>    : jenkins CI server hostname
+
+    -c <threshold>          : integer or percentage (ex: 2 or 50%)
+                              CRITICAL if <threshold> nodes or greater are offline
+
+    -w <threshold>          : integer or percentage (ex: 2 or 50%)
+                              WARNING if <threshold> nodes or greater are offline
+
+Optional arguments
+
+    -h This help message
+
+    -p <password>           : password to the jenkins CI server
+
+    -u <username>           : username to the jenkins CI server
+
+    -v verbose output
+
+```
+
+Command definition
+
+```
+define command{
+	command_name    check_jenkins_nodes
+	command_line    $USER1$/check_jenkins_nodes.pl -s$ARG1$ -u$ARG2$ -p$ARG3$ -w$ARG4$ -c$ARG5$
+}
+```
+
+Service definition to warn when a job hasn't built for 24 hours, and crit when it hasn't built for 36 hours.
+
+```
+define service {
+  use                             local-service
+  host_name                       buildserver.mycompany.com
+  service_description             Jenkins - node check
+  check_interval                  1
+  check_command                   check_jenkins_nodes!https://buildserver.mycompany.com!myuser!mypassword!2!51%
+  contacts                        bob,bill
 }
 ```

@@ -128,23 +128,24 @@ sub usage
 {
     my $usage = qq|\nUsage: check_jenkins_nodes.pl -s [jenkins server hostname & path] -w [integer or %] -c [integer or %] [-h this help message] [-u username] [-p password] [-v]
 
-    Options:
+    Required Arguments:
+        -s <server hostname>    : jenkins CI server hostname
 
-    -c critical threshold: integer or percentage (ex: 2 or 50%)
-        Critical if <critical> nodes or greater are offline
+        -c <threshold>          : integer or percentage (ex: 2 or 50%)
+                                  CRITICAL if <threshold> nodes or greater are offline
 
-    -h This help message
+        -w <threshold>          : integer or percentage (ex: 2 or 50%)
+                                  WARNING if <threshold> nodes or greater are offline
 
-    -p Optional: password to the jenkins CI server
+    Optional arguments
 
-    -s Required: jenkins CI server hostname
+        -h This help message
 
-    -u Optional: username to the jenkins CI server
+        -p <password>           : password to the jenkins CI server
 
-    -w warning threshold: integer or percentage (ex: 2 or 50%)
-        Warn if <warning> nodes or greater are offline
+        -u <username>           : username to the jenkins CI server
 
-    -v verbose output\n\n|;
+        -v verbose output\n\n|;
 
     return $usage;
 }
