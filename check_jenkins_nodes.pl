@@ -120,8 +120,12 @@ sub main {
         }
     }
 
+    if (! defined $exitCode)
+    {
+        $exitCode = $ERRORS{'UNKNOWN'}
+    }
     print $retStr;
-    exit ($exitCode || $ERRORS{'UNKNOWN'});
+    exit $exitCode;
 }
 
 sub usage
