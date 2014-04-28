@@ -116,7 +116,7 @@ sub main {
         else
         {
             # Failure connecting to CI server
-            $retStr = "Failed retrieving node status via API (API status line: $res->{status_line})";
+            $retStr = "Failed retrieving node status via API (API status line: " . $res->status_line . ")";
         }
     }
 
