@@ -116,12 +116,16 @@ sub main {
         else
         {
             # Failure connecting to CI server
-            $retStr = "Failed retrieving node status via API (API status line: $res->{status_line})";
+            $retStr = "Failed retrieving node status via API (API status line: " . $res->status_line . ")";
         }
     }
 
+    if (! defined $exitCode)
+    {
+        $exitCode = $ERRORS{'UNKNOWN'}
+    }
     print $retStr;
-    exit ($exitCode || $ERRORS{'UNKNOWN'});
+    exit $exitCode;
 }
 
 sub usage
