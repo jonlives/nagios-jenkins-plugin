@@ -69,48 +69,45 @@ sub main {
                 }
             }
 
-            if (my $offlineNodes = scalar(@offline))
+            my $offlineNodes = scalar(@offline);
+            my $offlineNodeNames = join(", ", map($_->{'displayName'}, @offline));
+
+            my $criticalThreshold = $critical;
+
+            # Convert critical threshold to a number if it's a %
+            if ($critical =~ s/\%$//)
             {
-                my $offlineNodeNames = join(", ", map($_->{'displayName'}, @offline));
-
-                my $criticalThreshold = $critical;
-
-                # Convert critical threshold to a number if it's a %
-                if ($critical =~ s/\%$//)
-                {
-                    $criticalThreshold = $critical/100 * $totalNodes;
-                }
+                $criticalThreshold = $critical/100 * $totalNodes;
+            }
 
 
-                my $warningThreshold = $warning;
+            my $warningThreshold = $warning;
 
-                # Convert warning threshold to a number if it's a %
-                if ($warning =~ s/\%$//)
-                {
-                    $warningThreshold = $warning/100 * $totalNodes;
-                }
+            # Convert warning threshold to a number if it's a %
+            if ($warning =~ s/\%$//)
+            {
+                $warningThreshold = $warning/100 * $totalNodes;
+            }
 
 
-                if ($offlineNodes >= $criticalThreshold)
-                {
-                    $retStr = "$offlineNodes/$totalNodes nodes offline >= $options{'c'} critical ($offlineNodeNames).\n";
-                    $exitCode = $ERRORS{'CRITICAL'};
-                }
+            if ($offlineNodes >= $criticalThreshold)
+            {
+                $retStr = "$offlineNodes/$totalNodes nodes offline >= $options{'c'} critical ($offlineNodeNames).\n";
+                $exitCode = $ERRORS{'CRITICAL'};
+            }
 
-                # Continue to check warning threshold if not critical
-                if (! $exitCode && $offlineNodes >= $warningThreshold)
-                {
-                    $retStr = "$offlineNodes/$totalNodes nodes offline >= $options{'w'} warning ($offlineNodeNames).\n";
-                    $exitCode =  $ERRORS{'WARNING'};
-                }
+            # Continue to check warning threshold if not critical
+            if (! $exitCode && $offlineNodes >= $warningThreshold)
+            {
+                $retStr = "$offlineNodes/$totalNodes nodes offline >= $options{'w'} warning ($offlineNodeNames).\n";
+                $exitCode =  $ERRORS{'WARNING'};
+            }
 
-                # Set success output if not warning
-                if (! $exitCode)
-                {
-                    $retStr = qq|$offlineNodes/$totalNodes nodes offline < $options{'w'} warning and < $options{'c'} critical ($offlineNodeNames).|;
-                    $exitCode = $ERRORS{'OK'};
-                }
-
+            # Set success output if not warning
+            if (! $exitCode)
+            {
+                $retStr = qq|$offlineNodes/$totalNodes nodes offline < $options{'w'} warning and < $options{'c'} critical ($offlineNodeNames).\n|;
+                $exitCode = $ERRORS{'OK'};
             }
         }
         else
