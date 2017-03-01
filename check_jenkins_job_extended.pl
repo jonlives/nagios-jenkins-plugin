@@ -27,6 +27,8 @@ my $numArgs = $#ARGV + 1;
 
 my $ciMasterUrl;
 my $jobName;
+my @jobPathName;
+my $jobPathURL;
 
 my $userName;
 my $password;
@@ -57,7 +59,13 @@ if ( $numArgs == 8 ){
   exit $exitCode;
 }
 
-my $jobStatusUrlPrefix = $ciMasterUrl . "/job/" . uri_escape($jobName);
+@jobPathName = split ( /\//, $jobName );
+foreach my $i (0 .. $#jobPathName) {
+  $jobPathName[$i] = uri_escape($jobPathName[$i]);
+}
+$jobPathURL=join ( "/job/", @jobPathName );
+
+my $jobStatusUrlPrefix = $ciMasterUrl . "/job/" . $jobPathURL;
 my $jobStatusURL = $jobStatusUrlPrefix . "/api/json";
 
 my $ua = LWP::UserAgent->new;
