@@ -68,14 +68,14 @@ if ( $res->is_success ) {
     my $jobStatus = 3;
     my $lastSuccessDaysAgo = -1;
     my $msg = "";
-    my $jobURL = $job->{url} . "lastSuccessfulBuild/api/json?tree=timestamp";
+    my $jobURL = $job->{url} . "lastSuccessfulBuild/api/json?tree=timestamp,duration";
 
     $req->uri( $jobURL );
     $res = $ua->request($req);
 
     if ( $res->is_success ) {
       my $jobJSON = $json->decode( $res->content );
-      my $lastSuccessfulBuildTs = $jobJSON->{timestamp};
+      my $lastSuccessfulBuildTs = $jobJSON->{timestamp} + $jobJSON->{duration};
       my $nowTs = time() * 1000;
 
       $lastSuccessDaysAgo = ($nowTs - $lastSuccessfulBuildTs ) / $dayMilliseconds;
