@@ -26,7 +26,7 @@ my $password;
 my $thresh_warn;
 my $thresh_crit;
 my $alert_on_fail;
-my $alert_on_lastx_fail;
+my $alert_on_lastx_fail = 0;
 my $alert_on_nostart;
 my $debug = 0;
 my $timeout = 0;
