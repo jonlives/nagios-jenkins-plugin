@@ -95,9 +95,7 @@ sub main {
             if ($dur_sec >= $thresh_crit && $thresh_crit) {
                 response("CRITICAL", "'$jobname' has not run successfully for $dur_human. " . ($ls_not_lb ? "Runs since failed. " : "No runs since. ") . $lb_data->{url} );
             } elsif ($dur_sec >= $thresh_warn && $thresh_warn && $ls_not_lb) {
-                response("CRITICAL", "'$jobname' has not run successfully for $dur_human. Runs since failed. " . $lb_data->{url});
-            } elsif ($dur_sec >= $thresh_warn && $thresh_warn) {
-                response("WARNING", "'$jobname' has not run successfully for $dur_human. No runs since. " . $lb_data->{url})
+                response("WARNING", "'$jobname' has not run successfully for $dur_human. " . ($ls_not_lb ? "Runs since failed. " : "No runs since. ") . $lb_data->{url} );
             }
             
             if ($ls_data->{number} != $lb_data->{number} && $alert_on_fail and $alert_on_lastx_fail <= 1) {
