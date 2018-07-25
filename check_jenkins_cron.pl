@@ -94,7 +94,7 @@ sub main {
             ($dur_sec, $dur_human) = calcdur(int($ls_data->{timestamp} / 1000));
             if ($dur_sec >= $thresh_crit && $thresh_crit) {
                 response("CRITICAL", "'$jobname' has not run successfully for $dur_human. " . ($ls_not_lb ? "Runs since failed. " : "No runs since. ") . $lb_data->{url} );
-            } elsif ($dur_sec >= $thresh_warn && $thresh_warn && $ls_not_lb) {
+            } elsif ($dur_sec >= $thresh_warn && $thresh_warn) {
                 response("WARNING", "'$jobname' has not run successfully for $dur_human. " . ($ls_not_lb ? "Runs since failed. " : "No runs since. ") . $lb_data->{url} );
             }
             
