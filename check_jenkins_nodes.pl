@@ -60,12 +60,17 @@ sub main {
             for my $computer (@{$obj->{'computer'} or []})
             {
                 ++$totalNodes;
-                if($computer->{'offline'} eq 'true')
+                if(($computer->{'offline'} eq 'true') || ($computer->{'offline'} eq '1'))
                 {
                     push(@offline, {
                         'displayName' => $computer->{'displayName'},
                         'offlineCauseReason' => $computer->{'offlineCauseReason'}
                     });
+                }
+		# all nodes online
+                else {
+                        $retStr = "All nodes online.\n";
+                        $exitCode =  $ERRORS{'OK'};
                 }
             }
 
