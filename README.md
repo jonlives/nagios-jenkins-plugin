@@ -1,10 +1,12 @@
 
 # Overview
 
-This repostitory contains three nagios plugins:
+This repostitory contains five nagios plugins:
 * check_jenkins_job_extended.pl - The original, as documented below. Designed to check for failures, not how long since success.
 * check_jenkins_cron.pl - A from-scratch copy designed to check jobs that *should* build periodically.
 * check_jenkins_nodes.pl - Checks the number of nodes with a status of "offline".
+* check_jenkins_view.pl - A nagios plugin for checking all jobs in specified Jenkins view
+* check_jenkins_job.pl - A nagios plugin for checking specified job
 
 # check_jenkins_cron.pl
 
@@ -166,4 +168,28 @@ define service {
   check_command                   check_jenkins_nodes!https://buildserver.mycompany.com!myuser!mypassword!2!51%
   contacts                        bob,bill
 }
+```
+
+# check_jenkins_view.pl
+
+A Nagios plugin for checking all jobs health in specified Jenkins view.
+
+It returns status as worst (highest) job status within the view.
+Job status is OK when health is above warning threshold, WARNING when health is between two given thresholds, otherwise - CRITICAL.
+It produces descriptive output with Nagios performance data.
+
+## Usage
+
+```
+Usage: check_jenkins_view.pl <Jenkins URL> <user_name> <password> <view_name> <critical_health_threshold> <warning_health_threshold>
+```
+# check_jenkins_job.pl
+
+A Nagios plugin for checking specified job health.
+Job status is OK, when health is 100%, WARNING when health is above specified thershold, otherwise - CRITICAL.
+
+## Usage
+
+```
+Usage: check_jenkins_job.pl <Jenkins URL> <user_name> <password> <job_name> <critical_health_threshold>
 ```
