@@ -81,7 +81,7 @@ sub main {
         &usage;
     }
     
-    my ($lb_status, $lb_resp, $lb_data) = apireq('lastBuild', $timeout);
+    my ($lb_status, $lb_resp, $lb_data) = apireq('lastCompletedBuild', $timeout);
     my ($ls_status, $ls_resp, $ls_data) = apireq('lastStableBuild', $timeout);
     my $ls_not_lb = 0;
     
