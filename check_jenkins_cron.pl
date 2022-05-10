@@ -143,7 +143,7 @@ sub main {
             }
         } else {
             ($dur_sec, $dur_human) = calcdur(int($lb_data->{timestamp} / 1000));
-            response ( 2, "'$jobname' has never run successfully. Last build was $dur_human ago." )
+            response ( "CRITICAL", "'$jobname' has never run successfully. Last build was $dur_human ago." )
         }
     } else {
         if ($alert_on_nostart) {
